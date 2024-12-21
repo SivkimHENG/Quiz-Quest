@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\QuizController;
 use App\Livewire\Quiz;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -33,9 +34,8 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::prefix('admin')->group(function () {
-    Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('adminDashboardView');
-});
+
+
 
 
 require __DIR__ . '/auth.php';

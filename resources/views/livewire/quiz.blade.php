@@ -31,9 +31,9 @@
     @endif
 
     <!-- Next Button -->
-    @if ($feedback === 'Correct! 🎉 Salesforce Lightning Design System is the right answer.')
+    @if ($feedback) <!-- Show Next Button only after feedback is given -->
         <button
-            wire:click="resetQuiz"
+            wire:click="nextQuestion"
             class="bg-green-500 text-white px-6 py-2 mt-4 rounded-lg hover:bg-green-600"
         >
             Next Question

@@ -3,48 +3,48 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\QuizResource\Pages;
-use App\Filament\Resources\QuizResource\RelationManagers;
-use App\Models\Quiz;
+use App\Models\Answer;
+use App\Models\Question;
 use Filament\Forms;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use function Laravel\Prompts\textarea;
 
 class QuizResource extends Resource
 {
-    protected static ?string $model = Quiz::class;
+    protected static ?string $model = Question::class;
+
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $model_answer = Answer::class;
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Textarea::make('question')->required()
-                    ->label('Quiz Question')->maxLength(255),
+                Forms\Components\TextInput::make('title')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Repeater::make('answers')
+                    ->label('Answer Options')
+                    ->relationship('answers')
+                    ->schema([
+                        Forms\Components\TextInput::make('answer')
+                            ->label('Answer Text')
+                            ->required()
+                            ->maxLength(255),
 
-                Repeater::make("answers")->label('Quiz Answers')->schema([
+                        Forms\Components\Checkbox::make('correct_answer')
+                            ->label('Mark as Correct Answer')->default(false)
 
-                    TextInput::make('answer')
-                        ->required()->label('Answer'),
-                    Checkbox::make("is_correct")
-                        ->label('Correct Answer')
-                        ->required(),
-                ])
-
-                    ->relationship('answers')->columns(1)
-
-
+                    ])
+                    ->required()
+                    ->minItems(2) // Require at least two answer options
+                    ->maxItems(4) // Limit to a maximum of four options
             ]);
     }
 
@@ -52,13 +52,13 @@ class QuizResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("question")
-                    ->sortable()->searchable(),
-
+                TextColumn::make("title")
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('correct_answer')
+                    ->label('Answers')
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -71,9 +71,7 @@ class QuizResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
