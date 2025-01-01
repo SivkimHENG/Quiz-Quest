@@ -1,79 +1,59 @@
 <?php
 
 
-
-
 namespace App\Livewire;
 
 use App\Models\Question;
-use App\Models\Quiz as ModelsQuiz;
 use Livewire\Component;
-
+use App\Livewire\layout;
 
 class Quiz extends Component
 {
-    public $questions = [];
-    public $currentQuestionIndex = 0;
-    public $selectedOption = null;
-    public $feedback = null;
 
-    public $question = '';
-    public $options = [];
-    public $correctOption = null;
+    public $questions;
+    public $totalQuestions;
+    public $selectedAnswer;
+    public $feedback = '';
+    public $score;
+    public $currentQuestionIndex;
+    protected $rules = [
+        'selectedAnswer' => 'required|exists:answer,id'
+    ];
 
 
     public function mount()
     {
-        $this->loadQuestions();
-    }
-
-    public function loadQuestions()
-    {
         $this->questions = Question::with('answers')->get();
-
-        $this->loadCurrentQuestion();
+        $this->totalQuestions = $this->questions->count();
+        $this->selectedAnswer = null;
+        $this->feedback = '';
     }
 
-    public function loadCurrentQuestion()
+
+    public function submitAnswer()
     {
 
-        if (isset($this->questions[$this->currentQuestionIndex])) {
-            $question = $this->questions[$this->currentQuestionIndex];
+        $this->validate();
+        $currentQuestions =  $this->questions[$this->currentQuestionIndex];
+        $correctAnswer = $currentQuestions->answers->where('correct_answer', true)->first();
 
-            $this->question = $question->questions;  // Question text
-            $this->options = $question->answers->pluck('answer')->toArray();  // Get the answer options
-            $this->correctOption = $question->answers->where('correct_answer', true)->first()?->id;  // Correct answer ID
+
+        if ($this->selectedAnswer == $correctAnswer->id) {
+            $this->feedback  = 'Great Job';
+            $this->score++;
         } else {
-            $this->question = 'No more questions available.';
-            $this->options = [];
-            $this->correctOption = null;
+            $this->feedback = 'Incorrect Try again !';
         }
+        $this->currentQuestionIndex++;
+
+        if ($this->currentQuestionIndex >= $this->totalQuestions) {
+            $this->feedback = 'Quiz Complete! Your score : {$this->score}/{$this->totalQuestions} ';
+        }
+
+        $this->selectedAnswer = null;
     }
 
-    public function selectOption($index)
-    {
-        $this->selectedOption = $index;
 
-        // Check if the selected option is correct
-        if ($this->options[$index] == $this->correctOption) {
-            $this->feedback = 'Correct! 🎉';
-        } else {
-            $this->feedback = 'Incorrect. 😢 Try again!';
-        }
-    }
-
-    public function nextQuestion()
-    {
-
-        if ($this->currentQuestionIndex < count($this->questions) - 1) {
-            $this->currentQuestionIndex++;
-            $this->loadCurrentQuestion();
-            $this->selectedOption = null;
-            $this->feedback = null;
-        } else {
-            $this->dispatchBrowserEvent('quizCompleted');
-        }
-    }
 
     public function render()
     {
